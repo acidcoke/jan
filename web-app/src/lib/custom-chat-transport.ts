@@ -77,6 +77,10 @@ import {
 import { isPredefinedRemoteProvider } from '@/lib/providerCaps'
 import { PING_OPEN } from '@/lib/coworkPing'
 import { paramsSettings } from '@/lib/predefinedParams'
+import {
+  activeCustomBody,
+  CUSTOM_BODY_PARAM_KEY,
+} from '@/lib/customRequestBody'
 import { CHAT_SLOT_ID } from '@/constants/models'
 import { createStepMetadata } from '@/lib/stepMetadata'
 
@@ -1400,6 +1404,10 @@ export class CustomChatTransport implements ChatTransport<UIMessage> {
       if (isPredefinedRemoteProvider(effectiveProviderName)) {
         for (const key of Object.keys(paramsSettings)) delete mergedParams[key]
       }
+      // The model's custom request JSON. It travels under its own key so the
+      // fetch wrapper can merge it in last, past the sampler filters.
+      const customBody = activeCustomBody(selectedModel)
+      if (customBody) mergedParams[CUSTOM_BODY_PARAM_KEY] = customBody
       // Pin chat to slot 0 so llama-server reuses this thread's cached KV
       // prefix across turns. Cowork and background tasks share the same slot;
       // what keeps them from destroying this prefix is thread_id below.

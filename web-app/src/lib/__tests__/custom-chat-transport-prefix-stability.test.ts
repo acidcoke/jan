@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest'
+import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
 import type { UIMessage } from '@ai-sdk/react'
 import type * as ProviderCaps from '@/lib/providerCaps'
 
@@ -135,6 +135,7 @@ vi.mock('../model-factory', () => ({
 import { CustomChatTransport } from '../custom-chat-transport'
 import { CoworkChatTransport } from '../coworkTransport'
 import { ModelFactory } from '../model-factory'
+import { CUSTOM_BODY_PARAM_KEY } from '../customRequestBody'
 
 const user = (id: string, text: string): UIMessage =>
   ({ id, role: 'user', parts: [{ type: 'text', text }] }) as UIMessage
@@ -398,6 +399,50 @@ it('keeps a Cowork run on its chosen model when the viewed model changes between
   selectedModel.id = 'other-session-model'
   await drain(await send(transport, [user('next', 'Next step')]))
   expect(vi.mocked(ModelFactory.createModel).mock.calls.map(([id]) => id)).toEqual(['gpt', 'gpt'])
+})
+
+describe('CustomChatTransport custom request JSON', () => {
+  const model = selectedModel as typeof selectedModel & {
+    settings?: Record<string, unknown>
+  }
+  const withCustomBody = (enabled: boolean) => {
+    model.settings = {
+      custom_body: {
+        key: 'custom_body',
+        controller_props: {
+          value: { chat_template_kwargs: { enable_thinking: false } },
+          enabled,
+        },
+      },
+    }
+  }
+  const sentParams = async () => {
+    vi.mocked(ModelFactory.createModel).mockClear()
+    const transport = new CustomChatTransport('you are jan', 'thread-1')
+    await drain(await send(transport, [user('u1', 'hello')]))
+    return vi.mocked(ModelFactory.createModel).mock.calls[0][2] ?? {}
+  }
+
+  beforeEach(() => {
+    provider.provider = 'openai'
+    h.providerId = 'openai'
+    selectedModel.id = 'gpt'
+  })
+  afterEach(() => {
+    delete model.settings
+  })
+
+  it('hands the selected model’s custom body to the model factory', async () => {
+    withCustomBody(true)
+    expect((await sentParams())[CUSTOM_BODY_PARAM_KEY]).toEqual({
+      chat_template_kwargs: { enable_thinking: false },
+    })
+  })
+
+  it('leaves it out while the custom body is switched off', async () => {
+    withCustomBody(false)
+    expect(await sentParams()).not.toHaveProperty(CUSTOM_BODY_PARAM_KEY)
+  })
 })
 
 // The filesystem server's `read_media_file` result, stored as its MCP content

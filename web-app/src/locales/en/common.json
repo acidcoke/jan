@@ -366,6 +366,20 @@
       "add": "Add",
       "cancel": "Cancel",
       "remove": "Remove"
+    },
+    "customBody": {
+      "section": "Custom request JSON",
+      "description": "Merged into every chat request sent to this model, after Jan's own parameters, so it overrides them. For server-specific options such as chat_template_kwargs.",
+      "enabled": "Send custom request JSON",
+      "triggerActive": "Custom request JSON (active)",
+      "thinking": "Thinking",
+      "thinkingDefault": "Default",
+      "thinkingOn": "On",
+      "thinkingOff": "Off",
+      "thinkingHint": "Sets chat_template_kwargs.enable_thinking, which Qwen3, DeepSeek-V3.1, GLM-4.5 and similar models read on llama.cpp, vLLM, SGLang and LM Studio.",
+      "invalid": "Not valid JSON: {{detail}}",
+      "notObject": "Must be a JSON object, e.g. {\"key\": \"value\"}",
+      "clear": "Clear"
     }
   },
   "modelControls": {

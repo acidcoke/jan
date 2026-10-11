@@ -67,6 +67,11 @@ import {
   splitToolImageSentinels,
 } from './tool-image-sentinel'
 import { filterDefaultSseEvents } from './sseEventTypeFilter'
+import {
+  CUSTOM_BODY_PARAM_KEY,
+  deepMergeJson,
+  isJsonObject,
+} from './customRequestBody'
 import { isPlatformTauri } from '@/lib/platform/utils'
 import { providerRemoteApiKeyChain } from '@/lib/provider-api-keys'
 import {
@@ -428,6 +433,8 @@ function requestUrlOf(input: RequestInfo | URL): string {
  * request body, normalising key names for OpenAI-compatible APIs:
  * - `max_output_tokens` is remapped to `max_tokens`
  * - client-side-only keys (e.g. `ctx_len`) are stripped
+ * - the model's custom request JSON (under CUSTOM_BODY_PARAM_KEY) is
+ *   deep-merged in last, verbatim, so it wins over everything Jan sets
  *
  * Also rewrites OpenAI-shape error bodies on non-OK responses so the inner
  * `error.message` is cleaned of stack-trace noise before the AI SDK surfaces
@@ -480,6 +487,7 @@ export function createCustomFetch(
     }
     const normalised: Record<string, unknown> = {}
     for (const [key, value] of Object.entries(parameters)) {
+      if (key === CUSTOM_BODY_PARAM_KEY) continue
       if (CLIENT_SIDE_PARAM_KEYS.has(key)) continue
       if (!keepLlamacppOnly && LLAMACPP_ONLY_PARAM_KEYS.has(key)) continue
       const targetKey = WIRE_KEY_REMAP[key] ?? key
@@ -510,10 +518,16 @@ export function createCustomFetch(
     if (keepLlamacppOnly && merged.max_tokens === 0) {
       merged.max_tokens = -1
     }
-    decodeAudioSentinelsInBody(merged)
-    decodeVideoSentinelsInBody(merged)
-    decodeToolImageSentinelsInBody(merged)
-    return merged
+    // The user's own JSON, sent as typed: no sampler filtering, no key
+    // remapping, and it overrides anything above.
+    const customBody = parameters[CUSTOM_BODY_PARAM_KEY]
+    const body = isJsonObject(customBody)
+      ? deepMergeJson(merged, customBody)
+      : merged
+    decodeAudioSentinelsInBody(body)
+    decodeVideoSentinelsInBody(body)
+    decodeToolImageSentinelsInBody(body)
+    return body
   }
 
   return async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
@@ -975,7 +989,14 @@ export class ModelFactory {
       case 'perplexity':
       case 'moonshot':
       case 'minimax':
-        return this.createOpenAICompatibleModel(modelId, provider)
+        // No sampling params for these; only the user's custom request JSON.
+        return this.createOpenAICompatibleModel(
+          modelId,
+          provider,
+          CUSTOM_BODY_PARAM_KEY in parameters
+            ? { [CUSTOM_BODY_PARAM_KEY]: parameters[CUSTOM_BODY_PARAM_KEY] }
+            : {}
+        )
 
       case 'mistral':
         return this.createMistralModel(modelId, provider, parameters)

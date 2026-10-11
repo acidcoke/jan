@@ -16,6 +16,8 @@ import { Switch } from '@/components/ui/switch'
 import { DynamicControllerSetting } from '@/containers/dynamicControllerSetting'
 import { SamplerDefaults } from '@/containers/SamplerDefaults'
 import { ChatTemplateKwargs } from '@/containers/ChatTemplateKwargs'
+import { CustomBodyEditor } from '@/containers/CustomBodyEditor'
+import { CUSTOM_BODY_SETTING_KEY } from '@/lib/customRequestBody'
 import { useModelProvider } from '@/hooks/useModelProvider'
 import { useServiceHub } from '@/hooks/useServiceHub'
 import { cn, getModelDisplayName } from '@/lib/utils'
@@ -320,6 +322,8 @@ export function ModelSettingFields({ model, provider }: ModelSettingProps) {
             if (entry[0] === 'reasoning') return acc
             // Rendered by the dedicated ChatTemplateKwargs section above.
             if (entry[0] === 'chat_template_kwargs') return acc
+            // Rendered by the dedicated CustomBodyEditor section below.
+            if (entry[0] === CUSTOM_BODY_SETTING_KEY) return acc
             // Removed in v15 migration; defend against any pre-migration
             // localStorage state that still carries the orphan entry.
             if (entry[0] === 'auto_increase_ctx_len') return acc
@@ -376,6 +380,12 @@ export function ModelSettingFields({ model, provider }: ModelSettingProps) {
             )
           })
           })()}
+          {model.embedding !== true && (
+            <CustomBodyEditor
+              providerId={provider.provider}
+              modelId={model.id}
+            />
+          )}
     </div>
   )
 }

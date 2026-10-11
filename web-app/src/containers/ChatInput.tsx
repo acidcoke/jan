@@ -41,6 +41,8 @@ import { generateId } from 'ai'
 import { useMessageQueue } from '@/stores/message-queue-store'
 import { QueuedMessageChip } from '@/containers/QueuedMessageBubble'
 import { SamplerPopover } from '@/containers/SamplerPopover'
+import { CustomBodyPopover } from '@/containers/CustomBodyPopover'
+import { hasNativeReasoningControl } from '@/lib/customRequestBody'
 import { useTranslation } from '@/i18n/react-i18next-compat'
 import { useGeneralSetting } from '@/hooks/useGeneralSetting'
 import { useModelProvider } from '@/hooks/useModelProvider'
@@ -2423,6 +2425,10 @@ const ChatInput = memo(function ChatInput({
                     updateCurrentThreadAssistant,
                   }}
                 />
+                <CustomBodyPopover
+                  providerId={selectedProvider}
+                  modelId={selectedModel?.id}
+                />
                 {showToolControls && hasJanBrowserMCPConfig && modelSupportsBrowser && (
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -2576,11 +2582,7 @@ const ChatInput = memo(function ChatInput({
                 )}
 
                 {!effectiveAgentMode &&
-                  (selectedProvider === 'llamacpp' ||
-                    selectedProvider === 'google' ||
-                    selectedProvider === 'gemini' ||
-                    selectedProvider === 'anthropic' ||
-                    selectedProvider === 'openai') &&
+                  hasNativeReasoningControl(selectedProvider) &&
                   (() => {
                     // The token-budget submenu only applies to local llama.cpp
                     // (budget resolved against live n_ctx). Cloud providers size
