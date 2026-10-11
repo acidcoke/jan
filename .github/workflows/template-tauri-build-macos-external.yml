@@ -15,6 +15,11 @@ on:
         type: string
         default: 'nightly'
         description: 'The channel to use for this job'
+      disable_updater:
+        required: false
+        type: boolean
+        default: false
+        description: 'If true, builds with the in-app updater disabled'
       runner:
         required: false
         type: string
@@ -132,6 +137,7 @@ jobs:
         env:
           NODE_OPTIONS: "--max-old-space-size=4196"
           APP_PATH: '.'
+          AUTO_UPDATER_DISABLED: ${{ inputs.disable_updater && 'true' || 'false' }}
 
       # The bundle is universal but the engine build is host-arch, so name the
       # slice that is actually covered instead of shipping the gap silently.

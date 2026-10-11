@@ -24,7 +24,7 @@ path = "src/main.rs"
 cli = ["app_lib/cli"]
 
 [dependencies]
-app_lib = { path = "..", package = "Jan", default-features = false }
+app_lib = { path = "..", package = "Jan-Custom-json", default-features = false }
 tauri-plugin-agent-tools = { path = "../plugins/tauri-plugin-agent-tools", default-features = false }
 chrono = { version = "0.4", features = ["serde"] }
 clap = { version = "4", features = ["derive"] }

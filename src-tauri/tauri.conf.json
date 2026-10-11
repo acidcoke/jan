@@ -1,9 +1,9 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Jan",
+  "productName": "Jan Custom json",
   "mainBinaryName": "Jan-Desktop",
   "version": "0.8.5",
-  "identifier": "jan.ai.app",
+  "identifier": "jan-custom-json.ai.app",
   "build": {
     "frontendDist": "../web-app/dist",
     "devUrl": "http://localhost:1420",
@@ -53,8 +53,7 @@
     "updater": {
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDJFNDEzMEVCMUEzNUFENDQKUldSRXJUVWE2ekJCTGc1Mm1BVXgrWmtES3huUlBFR0lCdG5qbWFvMzgyNDhGN3VTTko5Q1NtTW0K",
       "endpoints": [
-        "https://apps.jan.ai/update-check",
-        "https://github.com/janhq/jan/releases/latest/download/latest.json"
+        "https://github.com/acidcoke/jan/releases/latest/download/latest.json"
       ],
       "windows": {
         "installMode": "passive"
